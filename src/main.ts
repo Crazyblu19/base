@@ -12,8 +12,7 @@ import { Engine } from './types/Engine'
 
 import { addEntity, createWorld, IWorld, removeEntity } from "bitecs";
 
-(
-  async function() {
+async function initGameScene() {
 
     const world = createWorld()
     // noop entity
@@ -67,4 +66,8 @@ import { addEntity, createWorld, IWorld, removeEntity } from "bitecs";
 
     update()
   }
-)()
+
+// To trigger the event Listener
+document.addEventListener("initGameScene", () => {
+    initGameScene()
+});
