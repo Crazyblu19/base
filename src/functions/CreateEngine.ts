@@ -1,40 +1,40 @@
 import * as THREE from "three"
+import { Engine } from "../types/Engine"
 import { IWorld } from 'bitecs'
-import { Engine } from '../types/Engine'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { Group3DEntity } from '../types/Group3DEntity'
 
 export const createEngine = (world: IWorld) : Engine => {
+
+
   const scene = new THREE.Scene()
   scene.background = new THREE.Color("#FFEECC");
 
+  const gridHelper = new THREE.GridHelper( 1000, 20 );
+  scene.add( gridHelper );
   // CAMERA
-  const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-  camera.rotation.x = 0;
-  camera.rotation.y = 0;
-  camera.rotation.z = 0;
-
-  camera.position.x = 0;
-  camera.position.y = 0;
-  camera.position.z = 0;
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.y = 5;
+  camera.position.z = 10;
+  camera.position.x = -13;
 
   const hemilight = new THREE.HemisphereLight(0xffffff, 0x444444)
   hemilight.position.set(0,20,0);
   scene.add(hemilight)
 
-  const light = new THREE.DirectionalLight(0xffffff, 1)
-  light.position.set(1, 8, 0);
-  //light.lookAt(0,0,0)
-  light.castShadow = true
-  // DEFINES RES OF SHADOW
-  // needs to be a power of two
-  light.shadow.mapSize.width = 1024
-  light.shadow.mapSize.height = 1024
-  const directionalLightCameraHelper = new THREE.CameraHelper(light.shadow.camera)
-
-  scene.add(directionalLightCameraHelper)
+  const light = new THREE.DirectionalLight(0xffffff)
+  light.position.set(0,20,10);
   scene.add(light)
 
+  // LINES FOR DEBUG RENDERER
+  const material = new THREE.LineBasicMaterial({color: 0xffffff});
+  const geometry = new THREE.BufferGeometry()
+  const lines = new THREE.LineSegments(geometry, material);
+  lines.visible = false
+  const debugRenderer = {
+    lines
+  }
+  scene.add(lines);
 
   const renderer = new THREE.WebGLRenderer( { antialias: true } )
   renderer.physicallyCorrectLights = true;
@@ -56,23 +56,42 @@ export const createEngine = (world: IWorld) : Engine => {
 
   })
 
-  const objects = new Map()
-
-  const time = { last: 0, delta: 0, elapsed: 0, dt: 0 }
 
   const orbitControls = new OrbitControls(camera, renderer.domElement);
   orbitControls.target.set(0,0,0);
   orbitControls.dampingFactor = 0.05;
   orbitControls.enableDamping = true;
-  orbitControls.minDistance = 2
+  orbitControls.minDistance = 5
   orbitControls.maxDistance = 20
   orbitControls.maxPolarAngle = Math.PI / 2 - 0.05 // prevent camera below ground
   orbitControls.minPolarAngle = Math.PI / 4        // prevent top down view
   orbitControls.update();
 
+  const objects = new Map()
+
+  const robotAnimations: Map<number, Map<number, THREE.AnimationAction>> = new Map()
+
+  const time = { last: 0, delta: 0, elapsed: 0, dt: 0 }
+
+  const keys = {
+    forward: false,
+    backward: false,
+    left: false,
+    right: false,
+    space: false,
+    shift: false,
+  };
+  const animations: THREE.AnimationClip[] = []
+  const playersModels: Map<number, Group3DEntity> = new Map()
+
   return {
+    functions: {},
+    animations,
+    playersModels,
+    keys,
     camera,
     orbitControls,
+    robotAnimations,
     renderer,
     objects,
     time,

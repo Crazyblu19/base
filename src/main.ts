@@ -4,11 +4,13 @@ import * as THREE from "three"
 import './styles.css'
 
 import { Transform } from "./components/Transform"
-import { Cube } from "./components/Cube"
+import { Unit } from "./components/Unit"
 import { createEngine } from "./functions/CreateEngine"
 import { pipeline } from "./pipeline"
 import { createObject3DEntity } from "./functions/CreateObject3DEntity"
 import { Engine } from './types/Engine'
+
+import { createRobotEntity } from "./functions/CreateRobotEntity"
 
 import { addEntity, createWorld, IWorld, removeEntity } from "bitecs";
 
@@ -28,46 +30,38 @@ async function initGameScene() {
       new THREE.MeshLambertMaterial({color})
     )
 
-
     plane.receiveShadow = true
     engine.scene.add(plane)
 
     addComponent(engine.world, Transform, plane.eid)
 
-
     Transform.position.y[plane.eid] = 0
     Transform.position.z[plane.eid] = 0
     Transform.position.x[plane.eid] = 0
 
+    const createUnit = async () => {
+      ////////////////////
+      //Robot character//
+      const robot = await createRobotEntity(engine,
+        new THREE.MeshPhongMaterial({color: 'red'})
+      )
+      engine.scene.add(robot)
 
-  const cube = createObject3DEntity(engine.world,
-      new THREE.BoxGeometry(1,1,1),
-      new THREE.MeshPhongMaterial({color: 'red'})
-    )
-    cube.castShadow = true
+      addComponent(engine.world, Transform, robot.eid)
+      addComponent(engine.world, Unit, robot.eid)
 
-    engine.scene.add(cube)
+      Transform.position.y[robot.eid] = 0
+    }
 
-    addComponent(engine.world, Transform, cube.eid)
-    addComponent(engine.world, Cube, cube.eid)
-
-
-    Transform.position.y[cube.eid] = 3
-
-
+    await createUnit()
 
     const update = () =>
     {
       requestAnimationFrame( update )
 
       pipeline(engine)
-
     }
 
     update()
   }
-
-// To trigger the event Listener
-document.addEventListener("initGameScene", () => {
-    initGameScene()
-});
+  initGameScene()
